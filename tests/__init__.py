@@ -1,1 +1,1 @@
-"""Test suite for LearnerExpert multi-agent system."""
+"""Test suite for LearnerExpert application."""

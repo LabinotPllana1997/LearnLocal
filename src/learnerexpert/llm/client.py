@@ -19,7 +19,6 @@ from learnerexpert.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
-# Simple in-memory cache for development
 _response_cache: Dict[str, Dict[str, Any]] = {}
 
 
@@ -31,7 +30,6 @@ class OpenAIClientWrapper:
         self.model = model or self.settings.openai_model
         self.temperature = temperature or self.settings.temperature
         
-        # Initialize LangChain OpenAI client
         self._client = ChatOpenAI(
             api_key=self.settings.openai_api_key,
             model=self.model,
@@ -44,7 +42,6 @@ class OpenAIClientWrapper:
     
     def _generate_cache_key(self, messages: List[BaseMessage], **kwargs) -> str:
         """Generate cache key for request."""
-        # Simple hash of message content and parameters
         content = str([msg.content for msg in messages])
         params = str(sorted(kwargs.items()))
         return f"{self.model}:{hash(content + params)}"
@@ -76,7 +73,6 @@ class OpenAIClientWrapper:
     ) -> AIMessage:
         """Async invoke with caching and error handling."""
         
-        # Check cache first
         cache_key = self._generate_cache_key(messages, **kwargs)
         if cache_key in _response_cache:
             cache_entry = _response_cache[cache_key]
@@ -84,24 +80,19 @@ class OpenAIClientWrapper:
                 logger.debug(f"Cache hit for key: {cache_key[:16]}...")
                 return cache_entry["response"]
             else:
-                # Remove expired cache entry
                 del _response_cache[cache_key]
         
         try:
-            # Mock responses for testing if enabled
             if self.settings.mock_llm_responses:
                 return self._get_mock_response(messages)
             
-            # Bind tools if provided
             client = self._client
             if tools:
                 client = self._client.bind_tools(tools)
             
-            # Make API call
             logger.debug(f"Making OpenAI API call with {len(messages)} messages")
             response = await client.ainvoke(messages, **kwargs)
             
-            # Cache successful response
             self._cache_response(cache_key, response)
             
             logger.debug(f"OpenAI API call successful: {len(str(response.content))} chars")
@@ -109,7 +100,6 @@ class OpenAIClientWrapper:
             
         except Exception as e:
             logger.error(f"OpenAI API call failed: {e}")
-            # Return a fallback response instead of raising
             return AIMessage(
                 content=f"I apologize, but I'm experiencing technical difficulties. "
                        f"Error: {str(e)[:100]}..."
@@ -134,7 +124,6 @@ class OpenAIClientWrapper:
         
         content = last_message.content.lower()
         
-        # Pattern matching for different types of requests
         if "curriculum" in content and "validate" in content:
             mock_content = """
             Based on my analysis of the curriculum:
@@ -200,14 +189,11 @@ class OpenAIClientWrapper:
     
     def get_embedding(self, text: str) -> List[float]:
         """Get embedding for text (placeholder for future implementation)."""
-        # This would use OpenAI embedding API
-        # For now, return mock embedding
-        return [0.0] * 1536  # Mock 1536-dimensional embedding
+        return [0.0] * 1536
     
     def estimate_tokens(self, messages: List[BaseMessage]) -> int:
         """Estimate token count (rough approximation)."""
         total_chars = sum(len(str(msg.content)) for msg in messages)
-        # Rough approximation: ~4 characters per token
         return total_chars // 4
     
     def get_model_info(self) -> Dict[str, Any]:

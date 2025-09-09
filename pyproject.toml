@@ -106,8 +106,11 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-addopts = "-v --tb=short --cov=learnerexpert --cov-report=term-missing --cov-report=html --cov-report=xml"
+addopts = "-v --tb=short"
 asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (may take several minutes)"
+]
 
 [tool.coverage.run]
 source = ["src/learnerexpert"]

@@ -26,7 +26,6 @@ from learnerexpert.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
-# Module-level graph instance
 _graph: Optional[CompiledStateGraph] = None
 _checkpointer = MemorySaver()
 
@@ -48,19 +47,16 @@ def route_to_next_agent(state: LearnerExpertState) -> str:
         f"agent={current_agent}, completed={len(completed_agents)}"
     )
     
-    # Check for errors that should terminate workflow
     critical_errors = [e for e in errors if e.get("type") == "critical"]
     if critical_errors:
         logger.error(f"Critical errors found, terminating workflow")
         return "__end__"
     
-    # Check iteration limit
     max_iterations = state.get("max_iterations", 10)
     if len(completed_agents) >= max_iterations:
         logger.warning("Max iterations reached, terminating workflow")
         return "__end__"
     
-    # Route based on workflow stage
     routing_map = {
         WorkflowStage.INITIALIZE: AgentNames.CURRICULUM_VALIDATOR,
         WorkflowStage.VALIDATE: AgentNames.QUIZ_CREATOR,
@@ -89,19 +85,16 @@ def should_use_tools(state: LearnerExpertState) -> str:
     current_agent = state.get("current_agent")
     tool_call_count = state.get("tool_call_count", 0)
     
-    # Prevent infinite tool loops
     if tool_call_count >= 3:
         logger.warning(f"Tool call limit reached ({tool_call_count}), skipping tools")
         return "continue"
     
-    # Check if last message has tool calls
     if messages:
         last_message = messages[-1]
         if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
             logger.debug(f"Agent {current_agent} requested {len(last_message.tool_calls)} tools")
             return "tools"
     
-    # Default to continuing workflow
     return "continue"
 
 
@@ -114,7 +107,6 @@ def build_learner_graph() -> StateGraph:
     """
     logger.info("Building LearnerExpert multi-agent graph")
     
-    # Import agent functions (will be created in next steps)
     from learnerexpert.agents.nodes.orchestrator import orchestrator_agent
     from learnerexpert.agents.nodes.curriculum_validator import curriculum_validator_agent
     from learnerexpert.agents.nodes.quiz_creator import quiz_creator_agent
@@ -122,10 +114,8 @@ def build_learner_graph() -> StateGraph:
     from learnerexpert.agents.nodes.feedback_evaluator import feedback_evaluator_agent
     from learnerexpert.agents.nodes.memory import memory_agent
     
-    # Create the state graph
     builder = StateGraph(LearnerExpertState)
     
-    # Add all agent nodes
     builder.add_node(AgentNames.ORCHESTRATOR, orchestrator_agent)
     builder.add_node(AgentNames.CURRICULUM_VALIDATOR, curriculum_validator_agent)
     builder.add_node(AgentNames.QUIZ_CREATOR, quiz_creator_agent)
@@ -133,14 +123,10 @@ def build_learner_graph() -> StateGraph:
     builder.add_node(AgentNames.FEEDBACK_EVALUATOR, feedback_evaluator_agent)
     builder.add_node(AgentNames.MEMORY, memory_agent)
     
-    # Add tools node for all agents to use
     builder.add_node("tools", ToolNode(ALL_TOOLS))
     
-    # Define the workflow edges
-    # Start with orchestrator
     builder.add_edge(START, AgentNames.ORCHESTRATOR)
     
-    # Orchestrator routes to the appropriate next agent
     builder.add_conditional_edges(
         AgentNames.ORCHESTRATOR,
         route_to_next_agent,
@@ -154,7 +140,6 @@ def build_learner_graph() -> StateGraph:
         }
     )
     
-    # Each agent can use tools or continue to next agent via orchestrator
     for agent_name in [
         AgentNames.CURRICULUM_VALIDATOR,
         AgentNames.QUIZ_CREATOR, 
@@ -162,7 +147,6 @@ def build_learner_graph() -> StateGraph:
         AgentNames.FEEDBACK_EVALUATOR,
         AgentNames.MEMORY
     ]:
-        # Agent to tools or orchestrator
         builder.add_conditional_edges(
             agent_name,
             should_use_tools,
@@ -172,8 +156,6 @@ def build_learner_graph() -> StateGraph:
             }
         )
     
-    # Tools always return to the calling agent (handled by ToolNode)
-    # But we need to explicitly route back to orchestrator after tools
     builder.add_edge("tools", AgentNames.ORCHESTRATOR)
     
     logger.info("LearnerExpert graph built successfully")
@@ -192,16 +174,14 @@ def get_graph() -> CompiledStateGraph:
         logger.info("Compiling LearnerExpert graph for first time")
         
         try:
-            # Build the graph
             builder = build_learner_graph()
             
-            # Compile with memory checkpointing
             _graph = builder.compile(checkpointer=_checkpointer)
             
-            logger.info("✅ LearnerExpert graph compiled successfully")
+            logger.info("LearnerExpert graph compiled successfully")
             
         except Exception as e:
-            logger.error(f"❌ Failed to compile graph: {e}")
+            logger.error(f"Failed to compile graph: {e}")
             raise
     
     return _graph
@@ -232,7 +212,6 @@ async def run_workflow(
     logger.info(f"Starting workflow for user {user_id}, session {session_id}")
     
     try:
-        # Create initial state
         initial_state = create_initial_state(
             user_id=user_id,
             session_id=session_id,
@@ -242,10 +221,8 @@ async def run_workflow(
             **kwargs
         )
         
-        # Get compiled graph
         graph = get_graph()
         
-        # Run the workflow with checkpointing
         config = {
             "configurable": {
                 "thread_id": session_id,
@@ -256,7 +233,6 @@ async def run_workflow(
         logger.info("Executing LearnerExpert workflow...")
         final_state = await graph.ainvoke(initial_state, config)
         
-        # Extract results
         results = {
             "session_id": session_id,
             "user_id": user_id,
@@ -274,7 +250,7 @@ async def run_workflow(
             "token_usage": final_state.get("token_usage", {})
         }
         
-        logger.info(f"✅ Workflow completed successfully for session {session_id}")
+        logger.info(f"Workflow completed successfully for session {session_id}")
         logger.info(f"Completed agents: {len(results['completed_agents'])}")
         logger.info(f"Generated {len(results['quiz_items'])} quiz items")
         logger.info(f"Found {len(results['gap_matrix'])} curriculum gaps")
@@ -282,7 +258,7 @@ async def run_workflow(
         return results
         
     except Exception as e:
-        logger.error(f"❌ Workflow failed for session {session_id}: {e}")
+        logger.error(f"Workflow failed for session {session_id}: {e}")
         return {
             "session_id": session_id,
             "user_id": user_id,
@@ -315,11 +291,8 @@ def get_workflow_status(session_id: str) -> Dict[str, Any]:
     try:
         graph = get_graph()
         
-        # Get current state from checkpointer
         config = {"configurable": {"thread_id": session_id}}
         
-        # This would require accessing the checkpointer state
-        # For now, return a placeholder
         return {
             "session_id": session_id,
             "status": "unknown",
@@ -345,13 +318,10 @@ def reset_graph():
     logger.info("Graph reset successfully")
 
 
-# Graph visualization helper (for development/debugging)
 def get_graph_visualization() -> str:
     """Get a text representation of the graph structure."""
     try:
         graph = get_graph()
-        # This would create a visualization of the graph
-        # For now, return a description
         return """
 LearnerExpert Multi-Agent Workflow:
 
