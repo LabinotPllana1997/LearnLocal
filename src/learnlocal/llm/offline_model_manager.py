@@ -141,7 +141,7 @@ class OfflineModelManager:
                             "torch_dtype": torch.bfloat16,
                             "device_map": "cpu",
                             "max_memory": {"cpu": "2GB"},
-                            "offload_folder": "./temp_offload",
+                            "offload_folder": None,
                             "use_safetensors": True
                         })
                     elif device == "cuda":

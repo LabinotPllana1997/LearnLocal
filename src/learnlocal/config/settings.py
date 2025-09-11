@@ -8,7 +8,7 @@ import os
 import logging
 from functools import lru_cache
 from typing import List, Optional, Dict, Any
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class Settings(BaseSettings):
         extra="ignore"
     )
     
-    openai_api_key: str = Field(default="", description="OpenAI API key")
+    openai_api_key: str = Field(..., description="OpenAI API key")
     openai_model: str = Field(default="gpt-4o-mini", description="Default OpenAI model")
     openai_embedding_model: str = Field(
         default="text-embedding-3-small", 
@@ -54,16 +54,16 @@ class Settings(BaseSettings):
     ui_host: str = Field(default="0.0.0.0", description="UI host")
     
     max_file_size: int = Field(default=10485760, description="Max file size (10MB)")
-    allowed_extensions: List[str] = Field(
-        default=["pdf", "docx", "txt", "pptx"],
-        description="Allowed file extensions"
+    allowed_extensions: str = Field(
+        default="pdf,docx,txt,pptx",
+        description="Allowed file extensions (comma-separated)"
     )
     upload_directory: str = Field(default="./uploads", description="Upload directory")
     
     output_directory: str = Field(default="./outputs", description="Output directory")
-    export_formats: List[str] = Field(
-        default=["csv", "json", "html", "pdf"],
-        description="Available export formats"
+    export_formats: str = Field(
+        default="csv,json,html,pdf", 
+        description="Available export formats (comma-separated)"
     )
     
     whisper_model: str = Field(default="base", description="Whisper model size")
@@ -93,8 +93,8 @@ class Settings(BaseSettings):
     offline_llm_enabled: bool = Field(default=True, description="Enable offline LLM")
     offline_llm_provider: str = Field(default="ollama", description="Offline LLM provider (ollama or transformers)")
     offline_llm_model: str = Field(
-        default="llama3.1:8b",
-        description="Offline LLM model name"
+        default="llama3:8b",
+        description="Offline LLM model name (gpt-oss:20b or llama3:8b)"
     )
     offline_llm_device: str = Field(default="auto", description="Device for offline LLM")
     
@@ -108,14 +108,9 @@ class Settings(BaseSettings):
     ollama_timeout: int = Field(default=60, description="Ollama request timeout")
     ollama_auto_pull: bool = Field(default=True, description="Auto-pull models if not available")
     
-    frontend_origins: List[str] = Field(
-        default=[
-            "http://localhost:3000", 
-            "http://127.0.0.1:3000",
-            "https://learnlocal-expo-app-y538.bolt.host",
-            "*"
-        ],
-        description="Allowed frontend origins for CORS"
+    frontend_origins: str = Field(
+        default="http://localhost:3000,http://127.0.0.1:3000,*",
+        description="Allowed frontend origins for CORS (comma-separated)"
     )
     api_base_url: str = Field(default="http://localhost:8000", description="API base URL")
     docs_url: str = Field(default="/docs", description="API documentation URL path")
@@ -132,23 +127,29 @@ class Settings(BaseSettings):
     )
     database_echo: bool = Field(default=False, description="Database echo SQL")
     
-    @validator("allowed_extensions", pre=True)
-    def parse_extensions(cls, v):
-        if isinstance(v, str):
-            return [ext.strip().lower() for ext in v.split(",")]
-        return v
+    # Directory Configuration
+    data_directory: str = Field(default="./data", description="Data directory path")
+    models_cache_dir: str = Field(default="./models", description="Models cache directory")
     
-    @validator("export_formats", pre=True)
-    def parse_formats(cls, v):
-        if isinstance(v, str):
-            return [fmt.strip().lower() for fmt in v.split(",")]
-        return v
+    # HTTP Client Configuration
+    openai_timeout: float = Field(default=30.0, description="OpenAI client timeout seconds")
+    ollama_client_timeout: float = Field(default=300.0, description="Ollama client timeout seconds")
     
-    @validator("default_company_okrs", pre=True)
-    def parse_okrs(cls, v):
-        if isinstance(v, str):
-            return v  # Keep as string, will be split when used
-        return v
+    # Service Configuration
+    llm_generation_timeout: int = Field(default=30, description="LLM generation timeout seconds")
+    
+    def get_allowed_extensions_list(self) -> List[str]:
+        """Get allowed extensions as a list."""
+        return [ext.strip().lower() for ext in self.allowed_extensions.split(",") if ext.strip()]
+    
+    def get_export_formats_list(self) -> List[str]:
+        """Get export formats as a list."""
+        return [fmt.strip().lower() for fmt in self.export_formats.split(",") if fmt.strip()]
+    
+    def get_frontend_origins_list(self) -> List[str]:
+        """Get frontend origins as a list."""
+        return [origin.strip() for origin in self.frontend_origins.split(",") if origin.strip()]
+    
     
     def get_okrs_list(self) -> List[str]:
         return [okr.strip() for okr in self.default_company_okrs.split(",")]
@@ -158,6 +159,8 @@ class Settings(BaseSettings):
             self.upload_directory,
             self.output_directory,
             self.memory_path,
+            self.data_directory,
+            self.models_cache_dir,
             os.path.dirname(self.langgraph_checkpoint_path)
         ]
         

@@ -4,17 +4,27 @@ Basic API tests for LearnerExpert endpoints.
 
 import pytest
 import httpx
+import sys
+import os
+
+# Add the src directory to the path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from learnlocal.config.settings import get_settings
 
 
 class TestBasicAPI:
     """Basic API endpoint tests."""
     
-    BASE_URL = "http://localhost:8000"
+    def __init__(self):
+        settings = get_settings()
+        self.BASE_URL = f"http://{settings.api_host}:{settings.api_port}"
     
     @pytest.fixture(autouse=True)
     def setup_method(self):
         """Setup for each test method."""
-        self.client = httpx.Client(base_url=self.BASE_URL, timeout=300.0)
+        settings = get_settings()
+        self.client = httpx.Client(base_url=self.BASE_URL, timeout=settings.ollama_client_timeout)
         
     def teardown_method(self):
         """Cleanup after each test method."""
@@ -67,7 +77,8 @@ class TestBasicAPI:
     
     def test_api_docs(self):
         """Test that API documentation is accessible."""
-        client = httpx.Client(base_url=self.BASE_URL, timeout=30.0)
+        settings = get_settings()
+        client = httpx.Client(base_url=self.BASE_URL, timeout=settings.openai_timeout)
         try:
             response = client.get("/docs")
             assert response.status_code == 200

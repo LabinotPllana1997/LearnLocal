@@ -7,7 +7,7 @@ import uuid
 import json
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +17,13 @@ from ...services.tts_service import TTSService
 from ...services.database_service import DatabaseService
 from ...database import get_database_session
 from ...config.settings import get_settings
+from ...prompts import (
+    TEACHER_SYSTEM_PROMPT, 
+    STUDENT_SYSTEM_PROMPT, 
+    CURRICULUM_PROMPT, 
+    LESSON_PROMPT, 
+    QA_PROMPT
+)
 
 router = APIRouter(prefix="/api", tags=["offline"])
 
@@ -25,101 +32,148 @@ llm_service = get_unified_llm_service()
 tts_service = TTSService() if settings.tts_enabled else None
 
 def format_lesson_for_ui(raw_content: str, topic: str) -> str:
-    """Format lesson content for mobile UI display."""
+    """Format lesson content for React Native mobile UI display."""
     try:
-        # Try to parse as JSON first
         lesson_data = json.loads(raw_content)
         
-        # If it's already structured JSON, format it nicely
         if isinstance(lesson_data, dict):
-            formatted = f"# {lesson_data.get('title', f'Lesson: {topic}')}\n\n"
+            formatted_sections = []
+            
+            title = lesson_data.get('title', f'Lesson: {topic}')
+            formatted_sections.append(f"{title}")
+            formatted_sections.append("") 
             
             if 'content' in lesson_data:
-                formatted += f"{lesson_data['content']}\n\n"
+                content = lesson_data['content'].strip()
+                content = content.replace('##', '').replace('#', '').strip()
+                paragraphs = content.split('\n\n')
+                for para in paragraphs:
+                    if para.strip():
+                        formatted_sections.append(para.strip())
+                        formatted_sections.append("")
             
             if 'keyPoints' in lesson_data and lesson_data['keyPoints']:
-                formatted += "## 🔑 Key Points:\n"
+                formatted_sections.append("🔑 KEY POINTS:")
+                formatted_sections.append("")
                 for point in lesson_data['keyPoints']:
-                    formatted += f"• {point}\n"
-                formatted += "\n"
+                    formatted_sections.append(f"• {point}")
+                formatted_sections.append("")
             
             if 'activities' in lesson_data and lesson_data['activities']:
-                formatted += "## 🎯 Activities:\n"
+                formatted_sections.append("🎯 ACTIVITIES:")
+                formatted_sections.append("")
                 for i, activity in enumerate(lesson_data['activities'], 1):
-                    formatted += f"{i}. {activity}\n"
-                formatted += "\n"
+                    formatted_sections.append(f"{i}. {activity}")
+                formatted_sections.append("")
             
             if 'estimatedDuration' in lesson_data:
-                formatted += f"⏱️ **Estimated Duration:** {lesson_data['estimatedDuration']} minutes\n"
+                formatted_sections.append(f"⏱️ Duration: {lesson_data['estimatedDuration']} minutes")
             
-            return formatted
+            return '\n'.join(formatted_sections)
     
     except json.JSONDecodeError:
         pass
     
-    # If not JSON, format as plain text with structure
     lines = raw_content.strip().split('\n')
-    formatted = f"# Lesson: {topic}\n\n"
+    formatted_sections = []
+    
+    formatted_sections.append(f"Lesson: {topic}")
+    formatted_sections.append("")
     
     current_section = ""
     for line in lines:
         line = line.strip()
         if not line:
-            formatted += "\n"
+            if current_section:
+                formatted_sections.append("")
             continue
-            
-        # Detect and format headers
+        
+        line = line.replace('##', '').replace('#', '').replace('**', '').strip()
+        
         if any(keyword in line.lower() for keyword in ['objective', 'goal', 'introduction', 'overview']):
-            formatted += f"## 🎯 {line}\n\n"
+            formatted_sections.append(f"🎯 {line.upper()}")
+            formatted_sections.append("")
         elif any(keyword in line.lower() for keyword in ['key point', 'important', 'remember']):
-            formatted += f"## 🔑 {line}\n\n"
+            formatted_sections.append(f"🔑 {line.upper()}")
+            formatted_sections.append("")
         elif any(keyword in line.lower() for keyword in ['activity', 'exercise', 'practice']):
-            formatted += f"## 🎯 {line}\n\n"
+            formatted_sections.append(f"🎯 {line.upper()}")
+            formatted_sections.append("")
         elif any(keyword in line.lower() for keyword in ['summary', 'conclusion', 'recap']):
-            formatted += f"## 📝 {line}\n\n"
+            formatted_sections.append(f"📝 {line.upper()}")
+            formatted_sections.append("")
         elif line.startswith('-') or line.startswith('•'):
-            formatted += f"{line}\n"
+            formatted_sections.append(f"• {line[1:].strip()}")
         elif line.startswith(('1.', '2.', '3.', '4.', '5.')):
-            formatted += f"{line}\n"
+            formatted_sections.append(line)
         else:
-            formatted += f"{line}\n\n"
+            if len(line) > 80:
+                words = line.split()
+                current_line = ""
+                for word in words:
+                    if len(current_line + word) > 80:
+                        formatted_sections.append(current_line.strip())
+                        current_line = word + " "
+                    else:
+                        current_line += word + " "
+                if current_line.strip():
+                    formatted_sections.append(current_line.strip())
+            else:
+                formatted_sections.append(line)
+            formatted_sections.append("")
     
-    return formatted
+    return '\n'.join(formatted_sections)
 
 def format_chat_response_for_ui(raw_content: str) -> str:
-    """Format chat response for mobile UI display."""
-    # Clean up the response for better mobile display
+    """Format chat response for React Native mobile UI display."""
     lines = raw_content.strip().split('\n')
-    formatted_lines = []
+    formatted_sections = []
     
     for line in lines:
         line = line.strip()
         if not line:
             continue
-            
-        # Add proper spacing and formatting
+        
+        line = line.replace('**', '').replace('##', '').replace('#', '').strip()
+        
         if line.startswith('-') or line.startswith('•'):
-            formatted_lines.append(f"• {line[1:].strip()}")
-        elif line.startswith(('1.', '2.', '3.', '4.', '5.')):
-            formatted_lines.append(f"\n{line}")
-        elif len(line) > 100:  # Long lines, add some structure
-            formatted_lines.append(f"{line}\n")
+            formatted_sections.append(f"• {line[1:].strip()}")
+        elif line.startswith(('1.', '2.', '3.', '4.', '5.', '6.', '7.', '8.', '9.')):
+            formatted_sections.append(line)
         else:
-            formatted_lines.append(line)
+            if len(line) > 80:
+                words = line.split()
+                current_line = ""
+                for word in words:
+                    if len(current_line + word) > 80:
+                        formatted_sections.append(current_line.strip())
+                        current_line = word + " "
+                    else:
+                        current_line += word + " "
+                if current_line.strip():
+                    formatted_sections.append(current_line.strip())
+            else:
+                formatted_sections.append(line)
+        
+        formatted_sections.append("")
     
-    return '\n'.join(formatted_lines)
-
-# class QuestionRequest(BaseModel):
-#     """Request model for educational questions."""
-#     question: str
-#     context: str = ""
-#     user_type: str = "teacher"
-#     include_audio: bool = False
+    while formatted_sections and formatted_sections[-1] == "":
+        formatted_sections.pop()
+    
+    return '\n'.join(formatted_sections)
 
 class QuestionRequest(BaseModel):
     """Request model for educational questions."""
+    question: str
+    context: str = ""
+    user_type: str = "teacher"
+    include_audio: bool = False
+    model: str = "gpt-oss:20b"  
+
+class ChatRequest(BaseModel):
+    """Request model for educational questions."""
     message: str
-    model: str = "gpt-oss-20b"
+    model: str = "llama3:8b"
 
 class TTSRequest(BaseModel):
     """Request model for text-to-speech."""
@@ -133,6 +187,7 @@ class CurriculumRequest(BaseModel):
     level: str = "intermediate"
     duration: str = "1 hour"
     objectives: Optional[list] = None
+    model: str = "gpt-oss:20b"  
 
 class Message(BaseModel):
     """Individual message in lesson generation request."""
@@ -143,7 +198,7 @@ class LessonGenerationRequest(BaseModel):
     """Request model for lesson generation - matches HarmonyRequest interface."""
     conversation: Optional[dict] = None
     messages: Optional[list[Message]] = None
-    model: str = "gpt-oss"
+    model: str = "gpt-oss:20b"
     maxTokens: int = 2000
 
 @router.get("/health")
@@ -173,7 +228,7 @@ async def get_offline_status():
         "model_loading": not llm_service.is_model_loaded() if settings.offline_llm_enabled else False
     }
 
-@router.post("/chat")
+@router.post("/ask")
 async def ask_question(
     request: QuestionRequest,
     db: AsyncSession = Depends(get_database_session)
@@ -187,38 +242,83 @@ async def ask_question(
                 "status": "loading",
                 "message": "Offline LLM model is still loading. Please try again in a moment."
             }
-        if not request.message.strip():
-            raise HTTPException(status_code=400, detail="Message cannot be empty")
+        if not request.question.strip():
+            raise HTTPException(status_code=400, detail="Question cannot be empty")
         
         start_time = time.time()
         
-        # Generate response using the message field
-        raw_response = llm_service.generate_response(
-            prompt=request.message,
-            max_tokens=100,  # Use the current max_tokens setting
+        from ...llm.ollama_client import get_ollama_manager
+        ollama = get_ollama_manager()
+        
+        system_message = TEACHER_SYSTEM_PROMPT if request.user_type == "teacher" else STUDENT_SYSTEM_PROMPT
+        context_text = f"\n\nContext: {request.context}" if request.context else ""
+        
+        prompt = QA_PROMPT.format(
+            system_message=system_message,
+            question=request.question,
+            context_text=context_text
+        )
+        
+        raw_response = ollama.generate_response(
+            prompt=prompt,
+            model=request.model,
+            max_tokens=512,
             temperature=0.7
         )
         
-        # Format response for UI display
         formatted_response = format_chat_response_for_ui(raw_response)
         
         response_time_ms = (time.time() - start_time) * 1000
         
-        # Save to database
         question_record = await DatabaseService.save_question_response(
             session=db,
-            question_text=request.message,
+            question_text=request.question,
             answer_text=formatted_response,
-            user_type="user",
+            user_type=request.user_type,
             response_time_ms=response_time_ms,
             model_used=request.model
         )
         
         await DatabaseService.update_daily_stats(db)
         
-        # Return in ChatResponse format expected by frontend
         return {
             "response": formatted_response,
+            "model": request.model,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+
+@router.post("/chat")
+async def chat(
+    request: ChatRequest
+):
+    """Ask an educational question using offline LLM."""
+    try:
+        if not settings.offline_llm_enabled:
+            raise HTTPException(status_code=503, detail="Offline LLM model not enabled")
+        if not llm_service.is_model_loaded():
+            return {
+                "status": "loading",
+                "message": "Offline LLM model is still loading. Please try again in a moment."
+            }
+        if not request.message.strip():
+            raise HTTPException(status_code=400, detail="Message cannot be empty")
+        
+        from ...llm.ollama_client import get_ollama_manager
+        ollama = get_ollama_manager()
+        
+        response = ollama.generate_response(
+            prompt=request.message,
+            # model=request.model,
+            model = "llama3:8b",
+            max_tokens=2000,
+            temperature=0.7
+        )
+        
+        return {
+            "response": response,
             "model": request.model,
             "timestamp": datetime.now().isoformat()
         }
@@ -281,29 +381,53 @@ async def generate_curriculum(
             }
         start_time = time.time()
         
-        curriculum = llm_service.generate_curriculum_content(
+        from ...llm.ollama_client import get_ollama_manager
+        ollama = get_ollama_manager()
+        
+        objectives_text = ""
+        if request.objectives:
+            objectives_text = f"Learning objectives: {', '.join(request.objectives)}. "
+        
+        prompt = CURRICULUM_PROMPT.format(
             topic=request.topic,
             level=request.level,
             duration=request.duration,
-            objectives=request.objectives
+            objectives_text=objectives_text
         )
+        
+        content = ollama.generate_response(
+            prompt=prompt,
+            model=request.model,
+            max_tokens=1500,
+            temperature=0.7
+        )
+        
         response_time_ms = (time.time() - start_time) * 1000
         await DatabaseService.save_question_response(
             session=db,
             question_text=f"Generate curriculum for: {request.topic}",
-            answer_text=curriculum["content"],
+            answer_text=content,
             user_type="teacher",
             response_time_ms=response_time_ms,
-            model_used=settings.offline_llm_model
+            model_used=request.model
         )
         await DatabaseService.update_daily_stats(db)
         return {
-            **curriculum,
+            "topic": request.topic,
+            "level": request.level,
+            "duration": request.duration,
+            "content": content,
+            "model": request.model,
             "response_time_ms": response_time_ms
         }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating curriculum: {str(e)}")
+
+@router.options("/generate-lesson")
+async def generate_lesson_options():
+    """Handle CORS preflight for lesson generation."""
+    return {}
 
 @router.post("/generate-lesson")
 async def generate_lesson(
@@ -320,24 +444,25 @@ async def generate_lesson(
                 "message": "Offline LLM model is still loading. Please try again in a moment."
             }
         
-        # Handle both conversation (legacy) and messages formats
         messages = []
         if request.messages:
             messages = request.messages
-        elif request.conversation and isinstance(request.conversation, list):
-            # Convert conversation array to messages
-            messages = [Message(role=msg.get("role", "user"), content=msg.get("content", "")) 
-                       for msg in request.conversation if isinstance(msg, dict)]
-        elif request.conversation and hasattr(request.conversation, 'messages'):
-            # Handle nested conversation structure
-            conv_messages = getattr(request.conversation, 'messages', [])
-            messages = [Message(role=msg.get("role", "user"), content=msg.get("content", "")) 
-                       for msg in conv_messages if isinstance(msg, dict)]
+        elif request.conversation:
+            if isinstance(request.conversation, dict):
+                if 'messages' in request.conversation:
+                    conv_messages = request.conversation['messages']
+                    messages = [Message(role=msg.get("role", "user"), content=msg.get("content", "")) 
+                               for msg in conv_messages if isinstance(msg, dict)]
+                else:
+                    messages = [Message(role=msg.get("role", "user"), content=msg.get("content", "")) 
+                               for msg in [request.conversation] if isinstance(request.conversation, dict)]
+            elif isinstance(request.conversation, list):
+                messages = [Message(role=msg.get("role", "user"), content=msg.get("content", "")) 
+                           for msg in request.conversation if isinstance(msg, dict)]
         
         if not messages:
             raise HTTPException(status_code=400, detail="No messages provided in request")
         
-        # Extract information from messages
         system_content = ""
         developer_content = ""
         user_content = ""
@@ -350,83 +475,49 @@ async def generate_lesson(
             elif message.role == "user":
                 user_content = message.content
         
-        # Build comprehensive prompt for lesson generation
-        prompt = f"""{system_content}
-
-{developer_content}
-
-User Request: {user_content}
-
-Please generate a comprehensive educational lesson in a clean, structured format suitable for mobile app display. Use clear sections with headers and bullet points where appropriate. Make the content engaging and easy to read on a mobile device."""
+        prompt = LESSON_PROMPT.format(
+            system_content=system_content,
+            developer_content=developer_content,
+            user_content=user_content
+        )
         
         start_time = time.time()
         
-        # Generate lesson using the unified LLM service
-        raw_response = llm_service.generate_response(
+        from ...llm.ollama_client import get_ollama_manager
+        ollama = get_ollama_manager()
+        
+        raw_response = ollama.generate_response(
             prompt=prompt,
+            model=request.model,
             max_tokens=request.maxTokens,
             temperature=0.7
         )
         
         response_time_ms = (time.time() - start_time) * 1000
         
-        # Calculate token estimate (rough approximation)
-        token_estimate = len(raw_response.split()) * 1.3  # Rough token estimation
+        token_estimate = len(raw_response.split()) * 1.3
         
-        # Format the response for UI display
         formatted_content = format_lesson_for_ui(raw_response, user_content)
         
-        # Save to database
         await DatabaseService.save_question_response(
             session=db,
             question_text=f"Generate lesson: {user_content}",
             answer_text=formatted_content,
             user_type="teacher",
             response_time_ms=response_time_ms,
-            model_used=settings.offline_llm_model
+            model_used=request.model
         )
         
         await DatabaseService.update_daily_stats(db)
         
-        # Return in HarmonyResponse format expected by frontend
         return {
             "content": formatted_content,
             "tokens": int(token_estimate),
-            "model": settings.offline_llm_model
+            "model": request.model
         }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating lesson: {str(e)}")
-
-@router.get("/modules")
-async def get_learning_modules():
-    """Get available learning modules for the frontend."""
-    # Return sample modules for now - this can be expanded later
-    sample_modules = [
-        {
-            "id": "ai-basics",
-            "title": "AI Fundamentals",
-            "description": "Learn the basics of Artificial Intelligence",
-            "content": "Introduction to AI concepts, machine learning, and practical applications",
-            "difficulty": "beginner"
-        },
-        {
-            "id": "programming-101",
-            "title": "Programming Basics",
-            "description": "Introduction to programming concepts",
-            "content": "Variables, functions, loops, and basic programming structures",
-            "difficulty": "beginner"
-        },
-        {
-            "id": "data-science",
-            "title": "Data Science Fundamentals",
-            "description": "Understanding data analysis and visualization",
-            "content": "Data collection, cleaning, analysis, and visualization techniques",
-            "difficulty": "intermediate"
-        }
-    ]
-    
-    return sample_modules
 
 @router.get("/history/questions")
 async def get_question_history(

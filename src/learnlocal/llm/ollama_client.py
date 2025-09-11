@@ -17,9 +17,11 @@ settings = get_settings()
 class OllamaClient:
     """Client for interacting with local Ollama server."""
     
-    def __init__(self, base_url: str = "http://localhost:11434"):
+    def __init__(self, base_url: str = None):
+        if base_url is None:
+            base_url = settings.ollama_base_url
         self.base_url = base_url.rstrip('/')
-        self.client = httpx.Client(timeout=300.0)
+        self.client = httpx.Client(timeout=settings.ollama_client_timeout)
     
     def is_available(self) -> bool:
         """Check if Ollama server is running."""
@@ -147,6 +149,8 @@ class OllamaManager:
     def __new__(cls, base_url: str = None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
+            if base_url is None:
+                base_url = settings.ollama_base_url
             cls._instance.client = OllamaClient(base_url)
             cls._instance._initialized = True
         return cls._instance
@@ -154,6 +158,8 @@ class OllamaManager:
     def __init__(self, base_url: str = None):
         if hasattr(self, '_initialized'):
             return
+        if base_url is None:
+            base_url = settings.ollama_base_url
         self.client = OllamaClient(base_url)
         self._initialized = True
     
@@ -176,7 +182,7 @@ class OllamaManager:
     def generate_response(
         self,
         prompt: str,
-        model: str = "llama3.1:8b",
+        model: str = "gpt-oss:20b",
         temperature: float = 0.7,
         max_tokens: int = 512,
         **kwargs
@@ -210,5 +216,7 @@ def get_ollama_manager(base_url: str = None) -> OllamaManager:
     """Get the global Ollama manager instance."""
     global _ollama_manager
     if _ollama_manager is None:
+        if base_url is None:
+            base_url = settings.ollama_base_url
         _ollama_manager = OllamaManager(base_url)
     return _ollama_manager
