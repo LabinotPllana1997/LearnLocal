@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Main entry point for LearnerExpert application.
+Main entry point for LearnLocal application.
 """
 
 import sys
@@ -28,19 +28,19 @@ def main():
     logger = logging.getLogger(__name__)
     
     try:
-        from learnerexpert.main import app
-        from learnerexpert.config.settings import get_settings
+        from learnlocal.main import app
+        from learnlocal.config.settings import get_settings
         import uvicorn
         
         settings = get_settings()
         
-        logger.info("Starting LearnerExpert server...")
+        logger.info("Starting LearnLocal server...")
         logger.info(f"Server: {settings.api_base_url}")
         logger.info(f"API Docs: {settings.api_base_url}{settings.docs_url}")
         logger.info("Background services will initialize after startup")
         
         uvicorn.run(
-            "learnerexpert.main:app",
+            "learnlocal.main:app",
             host=settings.api_host,
             port=settings.api_port,
             reload=settings.debug,

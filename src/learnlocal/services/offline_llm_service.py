@@ -8,6 +8,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 from typing import Optional
 import logging
+from ..config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class OfflineLLMService:
             
             logger.info(f"Loading offline LLM: {self.model_name}")
             
-            cache_dir = "./models"
+            cache_dir = get_settings().models_cache_dir
             model_cache_path = f"{cache_dir}/models--openai--gpt-oss-20b"
             
             if os.path.exists(model_cache_path):
@@ -107,7 +108,7 @@ class OfflineLLMService:
                 "torch_dtype": torch.bfloat16,  # Use bfloat16 to match model's natural dtype
                 "device_map": "auto" if torch.cuda.is_available() else "cpu",
                 "max_memory": {0: "6GB"} if not torch.cuda.is_available() else None,
-                "offload_folder": "./temp_offload" if available_ram < 12 else None
+                "offload_folder": None
             }
             
             if torch.cuda.is_available():
@@ -219,7 +220,7 @@ class OfflineLLMService:
             try:
                 with ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(generate_with_timeout)
-                    outputs = future.result(timeout=30)
+                    outputs = future.result(timeout=get_settings().llm_generation_timeout)
             except FutureTimeoutError:
                 logger.error("Model generation timed out after 30 seconds")
                 return "I apologize, but the response generation is taking too long. Please try a simpler question."

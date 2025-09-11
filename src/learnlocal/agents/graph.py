@@ -14,15 +14,15 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 
-from learnerexpert.agents.states import (
+from learnlocal.agents.states import (
     LearnerExpertState, 
     WorkflowStage, 
     AgentNames, 
     AgentStatus,
     create_initial_state
 )
-from learnerexpert.agents.tools import ALL_TOOLS
-from learnerexpert.config.settings import get_settings
+from learnlocal.agents.tools import ALL_TOOLS
+from learnlocal.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -107,12 +107,12 @@ def build_learner_graph() -> StateGraph:
     """
     logger.info("Building LearnerExpert multi-agent graph")
     
-    from learnerexpert.agents.nodes.orchestrator import orchestrator_agent
-    from learnerexpert.agents.nodes.curriculum_validator import curriculum_validator_agent
-    from learnerexpert.agents.nodes.quiz_creator import quiz_creator_agent
-    from learnerexpert.agents.nodes.content_enricher import content_enricher_agent
-    from learnerexpert.agents.nodes.feedback_evaluator import feedback_evaluator_agent
-    from learnerexpert.agents.nodes.memory import memory_agent
+    from learnlocal.agents.nodes.orchestrator import orchestrator_agent
+    from learnlocal.agents.nodes.curriculum_validator import curriculum_validator_agent
+    from learnlocal.agents.nodes.quiz_creator import quiz_creator_agent
+    from learnlocal.agents.nodes.content_enricher import content_enricher_agent
+    from learnlocal.agents.nodes.feedback_evaluator import feedback_evaluator_agent
+    from learnlocal.agents.nodes.memory import memory_agent
     
     builder = StateGraph(LearnerExpertState)
     

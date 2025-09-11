@@ -10,7 +10,7 @@ if command -v python3 &> /dev/null; then
 import sys
 sys.path.insert(0, '$SCRIPT_DIR/src')
 try:
-    from learnerexpert.config.settings import get_settings
+    from learnlocal.config.settings import get_settings
     settings = get_settings()
     print(settings.api_port)
 except:
@@ -174,9 +174,9 @@ run_tests() {
     
     cd "$SCRIPT_DIR"
     if [[ -f "$VENV_PATH" ]]; then
-        $VENV_PATH test_learnerexpert.py
+        $VENV_PATH test_learnlocal.py
     else
-        python3 test_learnerexpert.py
+        python3 test_learnlocal.py
     fi
 }
 
@@ -252,37 +252,62 @@ run_setup() {
         fi
     fi
 
-    # Pull the GPT-OSS-20B model
+    # Pull both models for dynamic switching
     echo ""
-    echo "Downloading GPT-OSS-20B model (this may take several minutes)..."
-    echo "Model size: ~13GB"
-    ollama pull gpt-oss:20b
+    echo "Downloading models for dynamic switching..."
+    
+    MODELS=("llama3:8b" "gpt-oss:20b")
+    
+    for MODEL_NAME in "${MODELS[@]}"; do
+        echo ""
+        echo "Checking/downloading model: $MODEL_NAME"
+        
+        # Check if model already exists
+        if ollama list | grep -q "$MODEL_NAME"; then
+            echo "✓ Model $MODEL_NAME already available"
+        else
+            echo "Downloading $MODEL_NAME..."
+            if [[ "$MODEL_NAME" == *"8b"* ]]; then
+                echo "Model size: ~4.7GB"
+            elif [[ "$MODEL_NAME" == "gpt-oss:20b" ]]; then
+                echo "Model size: ~13GB"
+            else
+                echo "Model size: varies"
+            fi
+            
+            if ollama pull "$MODEL_NAME"; then
+                echo "✓ Successfully downloaded $MODEL_NAME"
+            else
+                echo "⚠ Failed to download $MODEL_NAME - continuing anyway"
+            fi
+        fi
+    done
 
-    if [[ $? -eq 0 ]]; then
-        echo ""
-        echo "✅ Setup completed successfully!"
-        echo ""
-        echo "🚀 To start the server:"
-        echo "  ./manage_server.sh start"
-        echo ""
-        echo "📖 Or manually:"
-        echo "  source venv/bin/activate"
-        echo "  python main.py"
-        echo ""
-        echo "🧪 To run tests:"
-        echo "  ./manage_server.sh test"
-        echo ""
-        echo "📊 Model info:"
-        echo "  Model: GPT-OSS-20B via Ollama"
-        echo "  Expected response time: 20-60 seconds"
-        echo "  API: http://localhost:8000/docs"
-        echo ""
-    else
-        echo "WARNING: Failed to download GPT-OSS-20B model"
-        echo "You can download it later with: ollama pull gpt-oss:20b"
-        echo ""
-        echo "Setup completed with warnings."
-    fi
+
+    echo ""
+    echo "✅ Setup completed successfully!"
+    echo ""
+    echo "🚀 To start the server:"
+    echo "  ./manage_server.sh start"
+    echo ""
+    echo "📖 Or manually:"
+    echo "  source venv/bin/activate"
+    echo "  python main.py"
+    echo ""
+    echo "🧪 To run tests:"
+    echo "  ./manage_server.sh test"
+    echo ""
+    echo "📊 Available Models:"
+    echo "  • llama3:8b - Fast responses (4.7GB)"
+    echo "  • gpt-oss:20b - High quality responses (13GB)"
+    echo "  Expected response time: 2-15 seconds"
+    echo "  API: http://localhost:$PORT/chat"
+    echo "  Docs: http://localhost:$PORT/docs"
+    echo ""
+    echo "💡 Usage Examples:"
+    echo '  curl -X POST http://localhost:'$PORT'/chat -H "Content-Type: application/json" -d '"'"'{"message": "Hello!", "model": "llama3:8b"}'"'"
+    echo '  curl -X POST http://localhost:'$PORT'/chat -H "Content-Type: application/json" -d '"'"'{"message": "Complex question", "model": "gpt-oss:20b"}'"'"
+    echo ""
 }
 
 case "${1:-}" in

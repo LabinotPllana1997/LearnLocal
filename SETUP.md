@@ -4,8 +4,8 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Animesh-Uttekar/learnerexpert.git
-   cd learnerexpert
+   git clone https://github.com/Animesh-Uttekar/learnlocal.git
+   cd learnlocal
    ```
 
 2. **Create virtual environment**
@@ -34,7 +34,7 @@
 6. **Access the application**
    - Server: http://localhost:8000
    - API Documentation: http://localhost:8000/docs
-   - React Frontend: Start the web app in `learnerexpert-web/`
+   - React Frontend: Start the web app in `learnlocal-web/`
 
 ## Requirements
 
@@ -78,9 +78,9 @@ Run the comprehensive test suite:
 
 Or test individual components:
 ```bash
-python test_learnerexpert.py quick      # Quick tests
-python test_learnerexpert.py standard   # Standard performance tests
-python test_learnerexpert.py educational # Educational content tests
+python test_learnlocal.py quick      # Quick tests
+python test_learnlocal.py standard   # Standard performance tests
+python test_learnlocal.py educational # Educational content tests
 ```
 
 ## Server Management
