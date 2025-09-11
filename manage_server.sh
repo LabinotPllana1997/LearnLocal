@@ -10,7 +10,7 @@ if command -v python3 &> /dev/null; then
 import sys
 sys.path.insert(0, '$SCRIPT_DIR/src')
 try:
-    from learnerexpert.config.settings import get_settings
+    from learnlocal.config.settings import get_settings
     settings = get_settings()
     print(settings.api_port)
 except:
@@ -174,9 +174,9 @@ run_tests() {
     
     cd "$SCRIPT_DIR"
     if [[ -f "$VENV_PATH" ]]; then
-        $VENV_PATH test_learnerexpert.py
+        $VENV_PATH test_learnlocal.py
     else
-        python3 test_learnerexpert.py
+        python3 test_learnlocal.py
     fi
 }
 
@@ -256,7 +256,9 @@ run_setup() {
     echo ""
     echo "Downloading GPT-OSS-20B model (this may take several minutes)..."
     echo "Model size: ~13GB"
-    ollama pull gpt-oss:20b
+    # ollama pull gpt-oss:20b
+    ollama pull llama3.1:8b
+
 
     if [[ $? -eq 0 ]]; then
         echo ""

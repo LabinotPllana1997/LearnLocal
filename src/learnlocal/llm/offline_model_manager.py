@@ -4,7 +4,7 @@ import torch
 from typing import Optional, Dict, Any
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
-from learnerexpert.config.settings import get_settings
+from learnlocal.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 

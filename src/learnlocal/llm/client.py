@@ -15,7 +15,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, AIMessage
 from langchain_core.tools import BaseTool
 
-from learnerexpert.config.settings import get_settings
+from learnlocal.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 

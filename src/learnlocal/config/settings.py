@@ -24,7 +24,7 @@ class Settings(BaseSettings):
         extra="ignore"
     )
     
-    openai_api_key: str = Field(..., description="OpenAI API key")
+    openai_api_key: str = Field(default="", description="OpenAI API key")
     openai_model: str = Field(default="gpt-4o-mini", description="Default OpenAI model")
     openai_embedding_model: str = Field(
         default="text-embedding-3-small", 
@@ -109,7 +109,12 @@ class Settings(BaseSettings):
     ollama_auto_pull: bool = Field(default=True, description="Auto-pull models if not available")
     
     frontend_origins: List[str] = Field(
-        default=["http://localhost:3000", "http://127.0.0.1:3000"],
+        default=[
+            "http://localhost:3000", 
+            "http://127.0.0.1:3000",
+            "https://learnlocal-expo-app-y538.bolt.host",
+            "*"
+        ],
         description="Allowed frontend origins for CORS"
     )
     api_base_url: str = Field(default="http://localhost:8000", description="API base URL")
@@ -122,7 +127,7 @@ class Settings(BaseSettings):
     tts_cleanup_hours: int = Field(default=24, ge=1, description="TTS cleanup hours")
     
     database_url: str = Field(
-        default="sqlite+aiosqlite:///./data/learnerexpert.db",
+        default="sqlite+aiosqlite:///./data/learnlocal.db",
         description="Database URL"
     )
     database_echo: bool = Field(default=False, description="Database echo SQL")

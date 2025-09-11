@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "learnerexpert"
+name = "learnlocal"
 version = "0.1.0"
 description = "AI-powered multi-agent L&D system for curriculum validation, quiz generation, and content enrichment"
 authors = [
@@ -86,20 +86,20 @@ docs = [
     "mkdocs-material>=9.4.0",
     "mkdocstrings[python]>=0.24.0",
 ]
-all = ["learnerexpert[dev,ui,docs]"]
+all = ["learnlocal[dev,ui,docs]"]
 
 [project.urls]
-Homepage = "https://github.com/learnerexpert/learnerexpert"
-Documentation = "https://learnerexpert.readthedocs.io"
-Repository = "https://github.com/learnerexpert/learnerexpert.git"
-Issues = "https://github.com/learnerexpert/learnerexpert/issues"
+Homepage = "https://github.com/learnlocal/learnlocal"
+Documentation = "https://learnlocal.readthedocs.io"
+Repository = "https://github.com/learnlocal/learnlocal.git"
+Issues = "https://github.com/learnlocal/learnlocal/issues"
 
 [project.scripts]
-learnerexpert = "learnerexpert.api.app:main"
-learnerexpert-ui = "learnerexpert.demo.app:main"
+learnlocal = "learnlocal.api.app:main"
+learnlocal-ui = "learnlocal.demo.app:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/learnerexpert"]
+packages = ["src/learnlocal"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -113,7 +113,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/learnerexpert"]
+source = ["src/learnlocal"]
 omit = ["*/tests/*", "*/test_*"]
 
 [tool.coverage.report]

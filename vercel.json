@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "name": "learnlocal-api",
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "api/index.py"
+    }
+  ],
+  "env": {
+    "PYTHONPATH": "./src",
+    "OFFLINE_LLM_ENABLED": "false",
+    "TTS_ENABLED": "false",
+    "DEBUG": "false",
+    "LOG_LEVEL": "INFO",
+    "API_HOST": "0.0.0.0",
+    "API_PORT": "8000",
+    "DATABASE_URL": "sqlite+aiosqlite:///tmp/learnlocal.db"
+  },
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["iad1"]
+}

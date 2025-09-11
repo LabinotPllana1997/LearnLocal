@@ -1,7 +1,7 @@
 """Quiz creator agent."""
 
 from typing import Dict, Any
-from learnerexpert.agents.states import LearnerExpertState
+from learnlocal.agents.states import LearnerExpertState
 
 async def quiz_creator_agent(state: LearnerExpertState) -> Dict[str, Any]:
     """Creates quiz questions based on curriculum content."""

@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from .models import Base
 
-DATABASE_URL = "sqlite+aiosqlite:///./data/learnerexpert.db"
+DATABASE_URL = "sqlite+aiosqlite:///./data/learnlocal.db"
 
 engine = create_async_engine(
     DATABASE_URL,
