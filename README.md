@@ -1,4 +1,4 @@
-# LearnerExpert 🎓
+# LearnerExpert
 
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://python.org)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-green.svg)](https://openai.com)
@@ -12,22 +12,22 @@ LearnerExpert is an innovative L&D expert system that automates curriculum valid
 
 ---
 
-## ✨ Features
+## Features
 
-- **🤖 Multi-Agent Architecture**: 6 specialized AI agents orchestrated via LangGraph
-- **📋 Curriculum Validation**: Automated gap analysis against company OKRs
-- **❓ Interactive Quiz Generation**: Multi-format questions with difficulty adjustment  
-- **📚 Content Enrichment**: Case studies, labs, and resource suggestions
-- **🔄 Feedback Loop**: Continuous improvement based on educator input
-- **🧠 Memory System**: Personalized preferences and session continuity
-- **🚀 FastAPI Backend**: Modern, async REST API with real-time processing
-- **📊 Multiple Output Formats**: CSV, JSON, HTML, PDF exports
-- **🎙️ Voice Input Support**: Whisper-powered speech-to-text (optional)
-- **💻 Web UI**: Streamlit interface for easy interaction
+- **Multi-Agent Architecture**: 6 specialized AI agents orchestrated via LangGraph
+- **Curriculum Validation**: Automated gap analysis against company OKRs
+- **Interactive Quiz Generation**: Multi-format questions with difficulty adjustment  
+- **Content Enrichment**: Case studies, labs, and resource suggestions
+- **Feedback Loop**: Continuous improvement based on educator input
+- **Memory System**: Personalized preferences and session continuity
+- **FastAPI Backend**: Modern, async REST API with real-time processing
+- **Multiple Output Formats**: CSV, JSON, HTML, PDF exports
+- **Voice Input Support**: Whisper-powered speech-to-text (optional)
+- **Web UI**: Streamlit interface for easy interaction
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
@@ -59,7 +59,7 @@ LearnerExpert is an innovative L&D expert system that automates curriculum valid
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -71,12 +71,16 @@ LearnerExpert is an innovative L&D expert system that automates curriculum valid
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/learnerexpert.git
+git clone https://github.com/Animesh-Uttekar/learnerexpert.git
 cd learnerexpert
 
-# Install dependencies
+# One-command setup (installs dependencies + Ollama + GPT-OSS-20B model)
+./manage_server.sh setup
+
+# OR manual setup:
 pip install -r requirements.txt
-# OR using the full development setup:
+# Install Ollama manually from https://ollama.ai
+ollama pull gpt-oss:20b
 pip install -e ".[dev]"
 ```
 
@@ -101,8 +105,14 @@ DEBUG=true
 ### 3. Run the API Server
 
 ```bash
-# Start the FastAPI server
-uvicorn learnerexpert.api.app:app --host 0.0.0.0 --port 8000 --reload
+# Start the server (recommended)
+./manage_server.sh start
+
+# OR manually
+python main.py
+
+# Check server status
+./manage_server.sh status
 
 # API will be available at:
 # - Main API: http://localhost:8000
@@ -121,7 +131,7 @@ streamlit run demo/app.py --server.port 8501
 
 ---
 
-## 💻 Development Setup
+## Development Setup
 
 ### For Contributors
 
@@ -168,7 +178,7 @@ learnerexpert/
 
 ---
 
-## 📖 Usage Examples
+## Usage Examples
 
 ### API Usage
 
@@ -208,7 +218,7 @@ enrichment_materials = results["enrichment_content"]
 
 ---
 
-## 🛠️ Configuration
+## Configuration
 
 ### Key Settings
 
@@ -231,7 +241,7 @@ enrichment_materials = results["enrichment_content"]
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Here's how to get started:
 
@@ -256,17 +266,17 @@ We welcome contributions! Here's how to get started:
 
 ### Areas for Contribution
 
-- 🎯 **Agent Development**: Implement new specialized agents
-- 🔧 **Tool Creation**: Build new agent tools and integrations  
-- 📊 **Output Formats**: Add new export formats and visualizations
-- 🧪 **Testing**: Expand test coverage and integration tests
-- 📚 **Documentation**: Improve docs and add tutorials
-- 🎨 **UI/UX**: Enhance the Streamlit interface
-- ⚡ **Performance**: Optimize LLM calls and caching
+- **Agent Development**: Implement new specialized agents
+-  **Tool Creation**: Build new agent tools and integrations  
+- **Output Formats**: Add new export formats and visualizations
+- **Testing**: Expand test coverage and integration tests
+-  **Documentation**: Improve docs and add tutorials
+-  **UI/UX**: Enhance the Streamlit interface
+- **Performance**: Optimize LLM calls and caching
 
 ---
 
-## 📚 Documentation
+##  Documentation
 
 - **[API Reference](docs/api.md)** - Complete API documentation
 - **[Agent Guide](docs/agents.md)** - Deep dive into agent system  
@@ -276,7 +286,7 @@ We welcome contributions! Here's how to get started:
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run all tests
@@ -297,15 +307,15 @@ pytest tests/unit/test_curriculum_validator.py -v
 
 ---
 
-## 📊 Roadmap
+## Roadmap
 
-### Phase 1: Core Foundation ✅
+### Phase 1: Core Foundation
 - [x] Multi-agent LangGraph architecture  
 - [x] OpenAI integration with caching
 - [x] FastAPI backend with async support
 - [x] Configuration management
 
-### Phase 2: Agent Implementation 🚧
+### Phase 2: Agent Implementation
 - [ ] Orchestrator Agent
 - [ ] Curriculum Validator Agent
 - [ ] Quiz Creator Agent
@@ -313,13 +323,13 @@ pytest tests/unit/test_curriculum_validator.py -v
 - [ ] Feedback Evaluator Agent
 - [ ] Memory Agent
 
-### Phase 3: Integration & UI 📋
+### Phase 3: Integration & UI 
 - [ ] Document processing (PDF, DOCX, voice)
 - [ ] Output generation (CSV, HTML, PDF)
 - [ ] Streamlit web interface
 - [ ] API documentation
 
-### Phase 4: Enhancement 🔮
+### Phase 4: Enhancement
 - [ ] Advanced analytics and reporting
 - [ ] Integration with LMS platforms
 - [ ] Multi-language support
@@ -328,7 +338,7 @@ pytest tests/unit/test_curriculum_validator.py -v
 
 ---
 
-## ⚡ Performance
+## Performance
 
 - **Response Time**: < 30 seconds for full curriculum analysis
 - **Supported File Size**: Up to 10MB documents
@@ -338,7 +348,7 @@ pytest tests/unit/test_curriculum_validator.py -v
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -356,19 +366,19 @@ A: Check logs for errors and ensure all required environment variables are set.
 
 ### Getting Help
 
-- 🐛 **Bug Reports**: [Create an issue](https://github.com/your-org/learnerexpert/issues)
-- 💬 **Questions**: [Start a discussion](https://github.com/your-org/learnerexpert/discussions)  
-- 📧 **Email**: team@yourorg.com
+- **Bug Reports**: [Create an issue](https://github.com/your-org/learnerexpert/issues)
+- **Questions**: [Start a discussion](https://github.com/your-org/learnerexpert/discussions)  
+- **Email**: team@yourorg.com
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **OpenAI** for GPT models and API
 - **LangChain/LangGraph** for multi-agent orchestration
@@ -378,7 +388,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 🚀 Ready to Transform L&D?
+## Ready to Transform L&D?
 
 LearnerExpert represents the future of AI-native corporate learning. Join us in building the next generation of educational technology!
 
@@ -388,7 +398,7 @@ LearnerExpert represents the future of AI-native corporate learning. Join us in 
 
 <div align="center">
 
-**Built with ❤️ for the future of learning**
+**Built with for the future of learning**
 
 [![GitHub stars](https://img.shields.io/github/stars/your-org/learnerexpert?style=social)](https://github.com/your-org/learnerexpert)
 [![GitHub forks](https://img.shields.io/github/forks/your-org/learnerexpert?style=social)](https://github.com/your-org/learnerexpert/fork)
