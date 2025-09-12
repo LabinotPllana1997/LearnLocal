@@ -173,7 +173,7 @@ class QuestionRequest(BaseModel):
 class ChatRequest(BaseModel):
     """Request model for educational questions."""
     message: str
-    model: str = "llama3:8b"
+    model: str = "gpt-oss:20b"
 
 class TTSRequest(BaseModel):
     """Request model for text-to-speech."""
@@ -311,8 +311,7 @@ async def chat(
         
         response = ollama.generate_response(
             prompt=request.message,
-            # model=request.model,
-            model = "llama3:8b",
+            model=request.model,
             max_tokens=2000,
             temperature=0.7
         )
