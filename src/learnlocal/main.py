@@ -1,5 +1,5 @@
 """
-Main FastAPI application for LearnerExpert with offline capabilities.
+Main FastAPI application for LearnLocal with offline capabilities.
 """
 
 import logging
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 app = FastAPI(
-    title="LearnerExpert",
+    title="LearnLocal",
     description="AI-powered multi-agent L&D system for curriculum validation, quiz generation, and content enrichment",
     version="1.0.0",
     docs_url=settings.docs_url,
@@ -24,9 +24,9 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.frontend_origins,
+    allow_origins=["*"] if settings.debug else settings.frontend_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -37,7 +37,7 @@ async def startup_event():
     await init_database()
     settings.ensure_directories()
     logger.info("Database initialized")
-    logger.info("LearnerExpert backend started successfully")
+    logger.info("LearnLocal backend started successfully")
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -47,7 +47,7 @@ async def shutdown_event():
 @app.get("/")
 async def root():
     return {
-        "message": "LearnerExpert Educational Assistant",
+        "message": "LearnLocal Educational Assistant",
         "status": "online",
         "features": [
             "Offline LLM with GPT-OSS-20B",

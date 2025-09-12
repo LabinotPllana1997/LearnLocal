@@ -15,7 +15,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, AIMessage
 from langchain_core.tools import BaseTool
 
-from learnerexpert.config.settings import get_settings
+from learnlocal.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class OpenAIClientWrapper:
             model=self.model,
             temperature=self.temperature,
             max_tokens=self.settings.max_tokens,
-            timeout=30.0,
+            timeout=self.settings.openai_timeout,
         )
         
         logger.info(f"Initialized OpenAI client with model: {self.model}")
@@ -222,7 +222,7 @@ def get_openai_client_with_tools(tools: List[BaseTool]) -> ChatOpenAI:
         model=settings.openai_model,
         temperature=settings.temperature,
         max_tokens=settings.max_tokens,
-        timeout=30.0,
+        timeout=settings.openai_timeout,
     )
     
     return client.bind_tools(tools)

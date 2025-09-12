@@ -6,16 +6,17 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from .models import Base
+from ..config.settings import get_settings
 
-DATABASE_URL = "sqlite+aiosqlite:///./data/learnerexpert.db"
+settings = get_settings()
 
 engine = create_async_engine(
-    DATABASE_URL,
+    settings.database_url,
     poolclass=StaticPool,
     connect_args={
         "check_same_thread": False,
     },
-    echo=False
+    echo=settings.database_echo
 )
 
 AsyncSessionLocal = sessionmaker(
@@ -27,7 +28,7 @@ AsyncSessionLocal = sessionmaker(
 async def init_database():
     """Initialize the database tables."""
     import os
-    os.makedirs("./data", exist_ok=True)
+    os.makedirs(settings.data_directory, exist_ok=True)
     
     try:
         async with engine.begin() as conn:

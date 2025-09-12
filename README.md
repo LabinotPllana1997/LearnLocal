@@ -1,4 +1,4 @@
-# LearnerExpert
+# LearnLocal
 
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://python.org)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-green.svg)](https://openai.com)
@@ -8,7 +8,7 @@
 
 **AI-powered multi-agent system for Learning & Development automation**
 
-LearnerExpert is an innovative L&D expert system that automates curriculum validation, quiz generation, and content enrichment for corporate training programs. Built with LangGraph multi-agent architecture and OpenAI GPT models, it helps educators create comprehensive, aligned, and engaging learning experiences.
+LearnLocal is an innovative L&D expert system that automates curriculum validation, quiz generation, and content enrichment for corporate training programs. Built with LangGraph multi-agent architecture and OpenAI GPT models, it helps educators create comprehensive, aligned, and engaging learning experiences.
 
 ---
 
@@ -71,8 +71,8 @@ LearnerExpert is an innovative L&D expert system that automates curriculum valid
 
 ```bash
 # Clone the repository
-git clone https://github.com/Animesh-Uttekar/learnerexpert.git
-cd learnerexpert
+git clone https://github.com/Animesh-Uttekar/learnlocal.git
+cd learnlocal
 
 # One-command setup (installs dependencies + Ollama + GPT-OSS-20B model)
 ./manage_server.sh setup
@@ -150,15 +150,15 @@ ruff check --fix src/ tests/
 ruff format src/ tests/
 
 # Type checking
-mypy src/learnerexpert/
+mypy src/learnlocal/
 ```
 
 ### Project Structure
 
 ```
-learnerexpert/
+learnlocal/
 ├── src/
-│   └── learnerexpert/
+│   └── learnlocal/
 │       ├── agents/           # Multi-agent system
 │       │   ├── nodes/        # Agent implementations
 │       │   ├── tools/        # Agent tools
@@ -199,7 +199,7 @@ print(f"Generated {len(results['quiz_items'])} quiz questions")
 ### Python SDK Usage
 
 ```python
-from learnerexpert.agents.graph import run_workflow
+from learnlocal.agents.graph import run_workflow
 
 # Run complete workflow
 results = await run_workflow(
@@ -293,7 +293,7 @@ We welcome contributions! Here's how to get started:
 pytest
 
 # Run with coverage
-pytest --cov=learnerexpert --cov-report=html
+pytest --cov=learnlocal --cov-report=html
 
 # Run specific test file
 pytest tests/unit/test_agents.py
@@ -366,8 +366,8 @@ A: Check logs for errors and ensure all required environment variables are set.
 
 ### Getting Help
 
-- **Bug Reports**: [Create an issue](https://github.com/your-org/learnerexpert/issues)
-- **Questions**: [Start a discussion](https://github.com/your-org/learnerexpert/discussions)  
+- **Bug Reports**: [Create an issue](https://github.com/your-org/learnlocal/issues)
+- **Questions**: [Start a discussion](https://github.com/your-org/learnlocal/discussions)  
 - **Email**: team@yourorg.com
 
 ---
@@ -390,9 +390,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Ready to Transform L&D?
 
-LearnerExpert represents the future of AI-native corporate learning. Join us in building the next generation of educational technology!
+LearnLocal represents the future of AI-native corporate learning. Join us in building the next generation of educational technology!
 
-**[Get Started Now](#-quick-start)** | **[View Examples](examples/)** | **[Join Community](https://github.com/your-org/learnerexpert/discussions)**
+**[Get Started Now](#-quick-start)** | **[View Examples](examples/)** | **[Join Community](https://github.com/your-org/learnlocal/discussions)**
 
 ---
 
@@ -400,8 +400,8 @@ LearnerExpert represents the future of AI-native corporate learning. Join us in 
 
 **Built with for the future of learning**
 
-[![GitHub stars](https://img.shields.io/github/stars/your-org/learnerexpert?style=social)](https://github.com/your-org/learnerexpert)
-[![GitHub forks](https://img.shields.io/github/forks/your-org/learnerexpert?style=social)](https://github.com/your-org/learnerexpert/fork)
-[![GitHub issues](https://img.shields.io/github/issues/your-org/learnerexpert)](https://github.com/your-org/learnerexpert/issues)
+[![GitHub stars](https://img.shields.io/github/stars/your-org/learnlocal?style=social)](https://github.com/your-org/learnlocal)
+[![GitHub forks](https://img.shields.io/github/forks/your-org/learnlocal?style=social)](https://github.com/your-org/learnlocal/fork)
+[![GitHub issues](https://img.shields.io/github/issues/your-org/learnlocal)](https://github.com/your-org/learnlocal/issues)
 
 </div>
